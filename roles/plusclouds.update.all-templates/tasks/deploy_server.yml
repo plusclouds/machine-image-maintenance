@@ -1,0 +1,49 @@
+---
+- set_fact:
+    cpu: "2"
+    ram_size: "1024"
+    disk_size: "10240"
+
+- name: Clone the image
+  uri:
+    url: "{{leo_url}}/v2/iaas/machine-images/{{ template_id }}/clone"
+    body: "name={{ server_name }}&hostname={{ server_name }}&total_cpu={{ cpu }}&total_ram={{ ram_size }}&total_disk={{ disk_size }}&datacenter_node={{ datacenter_node }}"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ user_token }}"
+    return_content: yes
+    status_code: 201
+    timeout: 300
+  register: cloned_vm
+
+- debug:
+    var: cloned_vm
+
+- set_fact:
+    vm_id: "{{ cloned_vm.json.data.id }}"
+  ignore_errors: yes
+
+- name: Wait until the template is halted
+  uri:
+    url: "{{leo_url}}/v2/iaas/virtual-machines/{{ cloned_vm.json.data.id }}/status"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ user_token }}"
+    return_content: yes
+    status_code: 200
+    timeout: 300
+  register: cloned_vm_status
+  until: cloned_vm_status.json.data.status == "halted"
+  retries: 50
+  delay: 4
+  ignore_errors: yes
+
+- name: Append failed image id during clone.
+  set_fact:
+    array_failures: "{{ array_failures }} + [ '{{ template_id  }}' ]"
+  when: cloned_vm_status is not success
+
+- name: Set lock in case of a clone error.
+  set_fact:
+    error_lock: False
+  when: cloned_vm_status is not success

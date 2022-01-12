@@ -1,0 +1,20 @@
+---
+- name: Deploy Server
+  hosts: localhost
+  become: false
+  gather_facts: false
+  roles:
+    -  role: plusclouds.update.all-templates
+  vars:
+    - network: "RZMLnjjLGj"
+    - datacenter_node: "bGyYjGLExD"
+    - compute_member: "OMWNQZvYBK"
+    - user_token: ""
+    - leo_url: http://10.100.0.114
+    - compute_member_ip:
+    - compute_member_username:
+    - compute_member_password: ""
+    - repo_server_id: "zVGNXorAoR"
+    - array_images: []
+    - array_failures: []
+    - error_lock: True

@@ -1,0 +1,6 @@
+- debug:
+    msg: "Ping test is successful for {{template_id}}, node has been deleted ..."
+
+- name: Build a list of all the security group names.
+  set_fact:
+    error_lock: True

@@ -1,0 +1,35 @@
+---
+- name: Deploy Server
+  include_tasks: "deploy_server.yml"
+
+- name: Create and Attach Network
+  include_tasks: "set_network_cards.yml"
+  when: error_lock
+
+- name: Boot Server
+  include_tasks: "boot_server.yml"
+  when: error_lock
+
+- name: Update Server
+  include_tasks: "update_server.yml"
+  when: error_lock
+
+- name: Shutdown Server
+  include_tasks: "shutdown_server.yml"
+  when: error_lock
+
+- name: Destroyed_vif
+  include_tasks: delete_network_cards.yml
+  when: error_lock
+
+- name: Export Server
+  include_tasks: "export_server.yml"
+  when: error_lock
+
+- name: Delete Server
+  include_tasks: "delete_server.yml"
+  when: error_lock
+
+- name: Clone Error
+  include_tasks: "clone_error.yml"
+  when: not error_lock

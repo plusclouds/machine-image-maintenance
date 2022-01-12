@@ -1,0 +1,18 @@
+---
+- name: Delete Virtual Interface 0 for cloned vm
+  uri:
+    url: "{{leo_url}}/v2/iaas/virtual-network-cards/{{ cloned_vm_vif0.json.data.id }}"
+    method: DELETE
+    headers:
+      Authorization: "Bearer {{ user_token }}"
+    body: ""
+    return_content: yes
+    status_code: 204,200,201
+  register: destroyed_vif
+
+- name: wait for config apply
+  wait_for:
+    timeout: 10
+
+- debug:
+    var: destroyed_vif
