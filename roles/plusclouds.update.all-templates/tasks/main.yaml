@@ -1,0 +1,16 @@
+---
+- name: Deploy Server
+  include_tasks: "getImages.yml"
+
+- set_fact:
+    server_name: UpdatingTemplate
+
+- name: Call the main roles number of images times
+  with_items: "{{array_images}}"
+  include_tasks: caller.yml
+  vars:
+    template_id: "{{item}}"
+
+- name: "Print all templates"
+  debug:
+    msg: "{{ array_failures }}"

@@ -1,0 +1,37 @@
+---
+- name: Boot the server
+  uri:
+    url: "{{leo_url}}/v2/iaas/virtual-machines/{{ cloned_vm.json.data.id }}/start"
+    method: PUT
+    headers:
+      Authorization: "Bearer {{ user_token }}"
+    return_content: yes
+    status_code: 204
+    timeout: 300
+
+- name: Wait until the status is running
+  uri:
+    url: "{{leo_url}}/v2/iaas/virtual-machines/{{ cloned_vm.json.data.id }}/status"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ user_token }}"
+    return_content: yes
+    status_code: 200
+    timeout: 300
+  register: cloned_vm_status
+  until: cloned_vm_status.json.data.status == "running"
+  retries: 50
+  delay: 4
+
+- name: Wait for ping loss
+  local_action: shell ping -q -c 1 -W 1 {{ public_ip_address.json.data.ip_addr }}
+  register: res
+  until: ('100.0% packet loss' not in res.stdout)
+  retries: 20
+  delay: 3
+  ignore_errors: yes
+
+- name: Append failed image id into array
+  set_fact:
+    array_failures: "{{ array_failures }} + [ '{{ template_id  }}' ]"
+  when: res is not success

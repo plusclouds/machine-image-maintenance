@@ -1,0 +1,24 @@
+---
+# tasks file for printer
+- name: Find netgateways server in related datacenter node
+  uri:
+    url: "{{leo_url}}/v2/repo/images?os=linux&repoServer={{ repo_server_id }}"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ user_token }}"
+    return_content: yes
+    status_code: 200
+    timeout: 300
+  register: images
+  delegate_to: localhost
+
+- name: Build a list of all the security group names.
+  set_fact:
+    array_images: "{{ array_images }} + [ '{{ images.json.data[my_idx].id  }}' ]"
+  loop: "{{ images.json.data }}"
+  loop_control:
+    index_var: my_idx
+
+- name: "Print all hostnames"
+  debug:
+    msg: "{{ array_images }}"

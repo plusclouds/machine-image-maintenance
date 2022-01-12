@@ -1,0 +1,59 @@
+---
+- name: Find netgateways server in related datacenter node
+  uri:
+    url: "{{leo_url}}/v2/repo/images/{{template_id}}"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ user_token }}"
+    return_content: yes
+    status_code: 200
+    timeout: 300
+  register: image
+  delegate_to: localhost
+
+- name: debug_lower
+  debug:
+    var: image.json.data.path.split("/")[4] | lower
+
+- name: set_factttt
+  set_fact:
+    image_name: "{{ image.json.data.path.split('/')[4] | lower }}"
+
+- name: image_name
+  debug:
+    var: image_name
+
+- name: debug cloned_vm.uuid
+  debug:
+    var: cloned_vm.json.data.uuid
+
+- set_fact:
+    uuid: "{{ cloned_vm.json.data.uuid }}"
+
+- name: debug uuid
+  debug:
+    var: uuid
+
+- name: Add host to group xen_server
+  add_host:
+    name: "{{ compute_member_ip }}"
+    groups: xen_server
+    ansible_ssh_user: "{{ compute_member_username }}"
+    ansible_ssh_pass: "{{ compute_member_password }}"
+    username: "{{ compute_member_username }}"
+    uuid: "{{ cloned_vm.json.data.uuid }}"
+    image_name: "{{ image_name }}"
+    ansible_ssh_extra_args: "-oKexAlgorithms=+diffie-hellman-group1-sha1 -oHostKeyAlgorithms=+ssh-dss"
+
+- name: "Print all templates"
+  debug: var=group_names
+
+- name: Export VM in Compute Member
+  raw: xe vm-export vm={{ uuid }} filename=/mnt/plusclouds-repo/{{repo_server_id}}/{{ image_name }}.new
+  delegate_to: "{{ groups.xen_server[0] }}"
+
+#- meta: end_play
+
+- name: Export VM in Compute Member
+  raw: mv /mnt/plusclouds-repo/{{repo_server_id}}/{{ image_name }}.new /mnt/plusclouds-repo/{{repo_server_id}}/{{ image_name }}
+  delegate_to: "{{ groups.xen_server[0] }}"
