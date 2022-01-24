@@ -14,6 +14,10 @@
   include_tasks: "update_server.yml"
   when: error_lock
 
+- name: Update Server
+  include_tasks: "delete_user.yml"
+  when: error_lock
+
 - name: Shutdown Server
   include_tasks: "shutdown_server.yml"
   when: error_lock
