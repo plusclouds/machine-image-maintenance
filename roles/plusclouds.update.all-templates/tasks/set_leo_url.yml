@@ -1,0 +1,41 @@
+---
+- name: Get Set API URL role
+  uri:
+    url: "{{leo_url}}/v2/ansible/roles?name=plusclouds.os.apiurl.set"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ user_token }}"
+    return_content: yes
+    status_code: 200
+    timeout: 300
+  register: apiurl_role
+
+- name: Execute Set LEO API URL role in server
+  uri:
+    url: "{{leo_url}}/v2/ansible/roles/{{ apiurl_role.json.data.0.id }}/execute"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ user_token }}"
+    body: "
+ip={{cloned_vm.json.data.connectionParameters.data.0.ip_addr}}&
+port=22&
+username={{cloned_vm.json.data.username}}&
+password={{cloned_vm.json.data.password}}&
+become=1&
+isSync=1&
+config={
+\"api_url\": \"{{ api_url }}\"
+}"
+#    return_content: yes
+    status_code: 200, 201, 204
+    timeout: 900
+#    with_items: "{{ cloned_vm.json.data }}"
+  register: ansible_output
+  ignore_errors: true
+
+- debug:
+    var: ansible_output
+
+- name: wait for config apply
+  wait_for:
+    timeout: 20
