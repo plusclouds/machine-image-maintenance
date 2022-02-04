@@ -11,6 +11,7 @@
     - compute_member: "OMWNQZvYBK"
     - user_token: ""
     - leo_url: http://10.100.0.114
+    - api_url: "https://api.plusclouds.com"
     - compute_member_ip:
     - compute_member_username:
     - compute_member_password: ""

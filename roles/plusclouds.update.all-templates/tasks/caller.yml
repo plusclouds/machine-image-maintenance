@@ -18,6 +18,10 @@
   include_tasks: "delete_user.yml"
   when: error_lock
 
+- name: Set LEO API URL
+  include_tasks: "set_leo_url.yml"
+  when: error_lock
+
 - name: Shutdown Server
   include_tasks: "shutdown_server.yml"
   when: error_lock
