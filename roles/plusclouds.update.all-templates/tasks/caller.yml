@@ -22,6 +22,10 @@
   include_tasks: "set_leo_url.yml"
   when: error_lock
 
+- name: Python Preparetion
+  include_tasks: "prepare_python.yml"
+  when: error_lock
+
 - name: Shutdown Server
   include_tasks: "shutdown_server.yml"
   when: error_lock
