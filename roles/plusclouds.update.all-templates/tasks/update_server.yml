@@ -21,6 +21,10 @@
     timeout: 300
   register: update_role
 
+- name: Debug Roles
+  debug:
+    var: update_role
+
 - name: Execute Update OS role in server
   uri:
     url: "{{leo_url}}/v2/ansible/roles/{{ update_role.json.data.0.id }}/execute"

@@ -34,7 +34,6 @@
   debug:
     var: uuid
 
-
 - name: Use Public API to Export VM
   uri:
     url: "{{ api_url }}/v2/iaas/virtual-machines/{{ cloned_vm.json.data.id }}/export"
