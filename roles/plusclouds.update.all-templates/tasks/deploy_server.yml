@@ -23,9 +23,12 @@
     vm_id: "{{ cloned_vm.json.data.id }}"
   ignore_errors: yes
 
+- debug:
+    var: vm_id
+
 - name: Wait until the template is halted
   uri:
-    url: "{{leo_url}}/v2/iaas/virtual-machines/{{ cloned_vm.json.data.id }}/status"
+    url: "{{leo_url}}/v2/iaas/virtual-machines/{{ vm_id }}/status"
     method: GET
     headers:
       Authorization: "Bearer {{ user_token }}"
@@ -34,7 +37,7 @@
     timeout: 300
   register: cloned_vm_status
   until: cloned_vm_status.json.data.status == "halted"
-  retries: 50
+  retries: 100
   delay: 4
   ignore_errors: yes
 

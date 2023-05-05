@@ -22,8 +22,8 @@
   include_tasks: "set_leo_url.yml"
   when: error_lock
 
-- name: Python Preparetion
-  include_tasks: "prepare_python.yml"
+- name: Install Python3
+  include_tasks: "install_python.yml"
   when: error_lock
 
 - name: Shutdown Server

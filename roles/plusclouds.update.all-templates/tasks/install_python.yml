@@ -1,33 +1,18 @@
 ---
-- name: Get VM informations
+- name: Get Set API URL role
   uri:
-    url: "{{leo_url}}/v2/iaas/virtual-machines/{{ cloned_vm.json.data.id }}"
+    url: "{{leo_url}}/v2/ansible/roles?name=plusclouds.leo.iaas.vm.template.prepare"
     method: GET
     headers:
       Authorization: "Bearer {{ user_token }}"
     return_content: yes
     status_code: 200
     timeout: 300
-  register: cloned_vm
+  register: python_role
 
-- name: Get Update OS role
+- name: Execute Set LEO API URL role in server
   uri:
-    url: "{{leo_url}}/v2/ansible/roles?name=plusclouds.os.update"
-    method: GET
-    headers:
-      Authorization: "Bearer {{ user_token }}"
-    return_content: yes
-    status_code: 200
-    timeout: 300
-  register: update_role
-
-- name: Debug Roles
-  debug:
-    var: update_role
-
-- name: Execute Update OS role in server
-  uri:
-    url: "{{leo_url}}/v2/ansible/roles/{{ update_role.json.data.0.id }}/execute"
+    url: "{{leo_url}}/v2/ansible/roles/{{ python_role.json.data.0.id }}/execute"
     method: POST
     headers:
       Authorization: "Bearer {{ user_token }}"
@@ -38,7 +23,8 @@ username={{cloned_vm.json.data.username}}&
 password={{cloned_vm.json.data.password}}&
 become=1&
 isSync=1&
-config={}"
+config={}
+"
 #    return_content: yes
     status_code: 200, 201, 204
     timeout: 900

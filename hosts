@@ -1,3 +1,1 @@
 [localhost]
-localhost ansible_user=ahmetfd ansible_become=yes ansible_sudo_pass=
-[xen_server]

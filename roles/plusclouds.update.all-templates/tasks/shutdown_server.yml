@@ -14,6 +14,21 @@
     status_code: 204
     timeout: 300
 
+- name: Wait until the template is halted
+  uri:
+    url: "{{leo_url}}/v2/iaas/virtual-machines/{{ cloned_vm.json.data.id }}/status"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ user_token }}"
+    return_content: yes
+    status_code: 200
+    timeout: 300
+  register: cloned_vm_status
+  until: cloned_vm_status.json.data.status == "halted"
+  retries: 100
+  delay: 4
+  ignore_errors: yes
+
 - name: Wait for config apply
   wait_for:
     timeout: 20
