@@ -14,34 +14,34 @@
   include_tasks: "update_server.yml"
   when: error_lock
 
-- name: Update Server
-  include_tasks: "delete_user.yml"
-  when: error_lock
-
-- name: Set LEO API URL
-  include_tasks: "set_leo_url.yml"
-  when: error_lock
-
-- name: Install Python3
-  include_tasks: "install_python.yml"
-  when: error_lock
-
-- name: Shutdown Server
-  include_tasks: "shutdown_server.yml"
-  when: error_lock
-
-- name: Destroyed_vif
-  include_tasks: delete_network_cards.yml
-  when: error_lock
-
-- name: Export Server
-  include_tasks: "export_server.yml"
-  when: error_lock
+#- name: Update Server
+#  include_tasks: "delete_user.yml"
+#  when: error_lock
+#
+#- name: Set LEO API URL
+#  include_tasks: "set_leo_url.yml"
+#  when: error_lock
+#
+#- name: Install Python3
+#  include_tasks: "install_python.yml"
+#  when: error_lock
+#
+#- name: Shutdown Server
+#  include_tasks: "shutdown_server.yml"
+#  when: error_lock
+#
+#- name: Destroyed_vif
+#  include_tasks: delete_network_cards.yml
+#  when: error_lock
+#
+#- name: Export Server
+#  include_tasks: "export_server.yml"
+#  when: error_lock
 
 - name: Delete Server
   include_tasks: "delete_server.yml"
   when: error_lock
 
-- name: Clone Error
-  include_tasks: "clone_error.yml"
-  when: not error_lock
+#- name: Clone Error
+#  include_tasks: "clone_error.yml"
+#  when: not error_lock

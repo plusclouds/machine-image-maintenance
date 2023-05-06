@@ -39,16 +39,54 @@ password={{cloned_vm.json.data.password}}&
 become=1&
 isSync=1&
 config={}"
-#    return_content: yes
+    return_content: yes
     status_code: 200, 201, 204
     timeout: 900
 #    with_items: "{{ cloned_vm.json.data }}"
-  register: ansible_output
+  register: playbook_execution
   ignore_errors: true
 
 - debug:
     var: ansible_output
 
-- name: wait for config apply
-  wait_for:
-    timeout: 20
+- name: Wait until the procedure is executed
+  uri:
+    url: "{{leo_url}}/v2/ansible/playbook/{{ playbook_execution.json.data.id }}/executions"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ user_token }}"
+    return_content: yes
+    status_code: 200, 201, 404
+    timeout: 300
+  register: playbook_execution_output
+  until: playbook_execution_output.status == 200
+  retries: 100
+  delay: 2
+  ignore_errors: yes
+
+- debug:
+    var: playbook_execution_output
+
+- name: Wait until the execution returns a result
+  uri:
+    url: "{{leo_url}}/v2/ansible/playbook/{{ playbook_execution.json.data.id }}/executions"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ user_token }}"
+    return_content: yes
+    status_code: 200, 201, 404
+    timeout: 300
+  register: playbook_execution_output
+  until: playbook_execution_output.json.data.0.execution_total_time > 0
+  retries: 100
+  delay: 2
+  ignore_errors: yes
+
+- set_fact:
+    result_failed: "{{ playbook_execution_output.json.data.0.result_failed | int }}"
+
+- name: Append failed image id into array update error message
+  set_fact:
+    array_failures: "{{ array_failures }} + [ '{{ template_id  }}' ] Update error"
+  when: result_failed = 1
+

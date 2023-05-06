@@ -1,0 +1,12 @@
+- name: Create issue to gitlab
+  uri:
+    url: http://gitlab.plusclouds/api/v4/projects/{{ gitlab_project_id }}/issues
+    method: POST
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_token }}"
+    body: "title={{ gitlab_title }}&description={{ gitlab_description }}&assignee_ids={{ gitlab_assignee_id }}"
+    return_content: yes
+    status_code: 200
+    timeout: 300
+  delegate_to: ansible.yenibosna.plusclouds
+  register: gitlab_result
