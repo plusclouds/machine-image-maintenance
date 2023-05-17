@@ -28,8 +28,3 @@
   retries: 100
   delay: 4
   ignore_errors: yes
-
-- name: Wait for config apply
-  wait_for:
-    timeout: 20
-  delegate_to: localhost

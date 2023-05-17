@@ -38,7 +38,8 @@ username={{cloned_vm.json.data.username}}&
 password={{cloned_vm.json.data.password}}&
 become=1&
 isSync=1&
-config={}"
+config={}&
+delete_after_run=0"
     return_content: yes
     status_code: 200, 201, 204
     timeout: 900
@@ -77,16 +78,58 @@ config={}"
     status_code: 200, 201, 404
     timeout: 300
   register: playbook_execution_output
-  until: playbook_execution_output.json.data.0.execution_total_time > 0
+  until: "{{playbook_execution_output.json.data.0.execution_total_time|int > 0 }}"
   retries: 100
   delay: 2
   ignore_errors: yes
 
+- debug:
+    var: playbook_execution_output
+
 - set_fact:
     result_failed: "{{ playbook_execution_output.json.data.0.result_failed | int }}"
 
-- name: Append failed image id into array update error message
-  set_fact:
-    array_failures: "{{ array_failures }} + [ '{{ template_id  }}' ] Update error"
-  when: result_failed = 1
+- name: Create issue to gitlab
+  uri:
+    url: "{{ gitlab_url }}/api/v4/projects/{{ gitlab_project_id }}/issues"
+    method: POST
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_token }}"
+    body: "title=Update OS problem: {{ template_id }}&description=The update OS is not running properly for this template. You can check the
+     result of the execution from the playbook executions endpoint. The playbook execution id is: {{ playbook_execution.json.data.id }}&assignee_ids={{ gitlab_assignee_id }}"
+    return_content: yes
+    status_code: 201
+    timeout: 300
+  delegate_to: localhost
+  register: gitlab_result
+  when: playbook_execution_output.json.data.0.result_failed|int == 1
 
+- name: Create issue to gitlab
+  uri:
+    url: "{{ gitlab_url }}/api/v4/projects/{{ gitlab_project_id }}/issues"
+    method: POST
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_token }}"
+    body: "title=Update OS problem: {{ template_id }}&description=The update role ran on this server but nothing changed.
+    The playbook execution id is: {{ playbook_execution.json.data.id }}&assignee_ids={{ gitlab_assignee_id }}"
+    return_content: yes
+    status_code: 201
+    timeout: 300
+  delegate_to: localhost
+  register: gitlab_result
+  when: playbook_execution_output.json.data.0.result_ok|int == 0 and playbook_execution_output.json.data.0.result_changed|int == 0
+
+- name: Create issue to gitlab
+  uri:
+    url: "{{ gitlab_url }}/api/v4/projects/{{ gitlab_project_id }}/issues"
+    method: POST
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_token }}"
+    body: "title=Cannot reach OS problem: {{ template_id }}&description=I tried to reach the server but cannot reach. There can be an SSH error.
+     The playbook execution id is: {{ playbook_execution.json.data.id }}&assignee_ids={{ gitlab_assignee_id }}"
+    return_content: yes
+    status_code: 201
+    timeout: 300
+  delegate_to: localhost
+  register: gitlab_result
+  when: playbook_execution_output.json.data.0.result_unreachable|int == 1

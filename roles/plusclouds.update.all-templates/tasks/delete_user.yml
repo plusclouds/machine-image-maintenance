@@ -23,7 +23,9 @@ username={{cloned_vm.json.data.username}}&
 password={{cloned_vm.json.data.password}}&
 become=1&
 isSync=1&
-config={}"
+config={
+\"user\": \"plusclouds\"
+}"
 #    return_content: yes
     status_code: 200, 201, 204
     timeout: 900
