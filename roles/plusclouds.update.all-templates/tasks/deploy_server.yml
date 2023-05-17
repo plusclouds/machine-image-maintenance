@@ -41,6 +41,23 @@
   delay: 4
   ignore_errors: yes
 
+- debug:
+    var: cloned_vm_status
+
+- name: Create issue to gitlab
+  uri:
+    url: "{{ gitlab_url }}/api/v4/projects/{{ gitlab_project_id }}/issues"
+    method: POST
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_token }}"
+    body: "title=Cannot import image: {{ template_id }}&description=We cannot import this image with template id: {{ template_id }}&assignee_ids={{ gitlab_assignee_id }}"
+    return_content: yes
+    status_code: 201
+    timeout: 300
+  delegate_to: localhost
+  register: gitlab_result
+  when: cloned_vm_status.failed is true
+
 - name: Append failed image id during clone.
   set_fact:
     array_failures: "{{ array_failures }} + [ '{{ template_id  }}' ]"
@@ -49,4 +66,18 @@
 - name: Set lock in case of a clone error.
   set_fact:
     error_lock: False
+  when: cloned_vm_status is not success
+
+- name: Create issue to gitlab
+  uri:
+    url: "{{ gitlab_url }}/api/v4/projects/{{ gitlab_project_id }}/issues"
+    method: POST
+    headers:
+      PRIVATE-TOKEN: "{{ gitlab_token }}"
+    body: "title=Image import problem: {{ template_id }}&description=The image with this ID cannot be imported the error message is; {{ cloned_vm.json.error.message }}.&assignee_ids={{ gitlab_assignee_id }}"
+    return_content: yes
+    status_code: 201
+    timeout: 300
+  delegate_to: localhost
+  register: gitlab_result
   when: cloned_vm_status is not success

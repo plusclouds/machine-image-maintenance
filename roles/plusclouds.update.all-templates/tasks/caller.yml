@@ -1,47 +1,64 @@
 ---
-- name: Deploy Server
-  include_tasks: "deploy_server.yml"
+- name: Deploy and test block
+  block:
+    - name: Deploy Server
+      include_tasks: "deploy_server.yml"
 
-- name: Create and Attach Network
-  include_tasks: "set_network_cards.yml"
-  when: error_lock
+    - name: Create and Attach Network
+      include_tasks: "set_network_cards.yml"
+      when: error_lock
 
-- name: Boot Server
-  include_tasks: "boot_server.yml"
-  when: error_lock
+    - name: Boot Server
+      include_tasks: "boot_server.yml"
+      when: error_lock
 
-- name: Update Server
-  include_tasks: "update_server.yml"
-  when: error_lock
+    - name: Update Server
+      include_tasks: "update_server.yml"
+      when: error_lock
 
-#- name: Update Server
-#  include_tasks: "delete_user.yml"
-#  when: error_lock
-#
-#- name: Set LEO API URL
-#  include_tasks: "set_leo_url.yml"
-#  when: error_lock
-#
-#- name: Install Python3
-#  include_tasks: "install_python.yml"
-#  when: error_lock
-#
-#- name: Shutdown Server
-#  include_tasks: "shutdown_server.yml"
-#  when: error_lock
-#
-#- name: Destroyed_vif
-#  include_tasks: delete_network_cards.yml
-#  when: error_lock
-#
-#- name: Export Server
-#  include_tasks: "export_server.yml"
-#  when: error_lock
+    - name: Update Server
+      include_tasks: "delete_user.yml"
+      when: error_lock
 
-- name: Delete Server
-  include_tasks: "delete_server.yml"
-  when: error_lock
+    - name: Set LEO API URL
+      include_tasks: "set_leo_url.yml"
+      when: error_lock
+    #
+    #- name: Install Python3
+    #  include_tasks: "install_python.yml"
+    #  when: error_lock
+    #
+    - name: Shutdown Server
+      include_tasks: "shutdown_server.yml"
+      when: error_lock
+    #
+    #- name: Destroyed_vif
+    #  include_tasks: delete_network_cards.yml
+    #  when: error_lock
+    #
+    #- name: Export Server
+    #  include_tasks: "export_server.yml"
+    #  when: error_lock
 
-#- name: Clone Error
-#  include_tasks: "clone_error.yml"
-#  when: not error_lock
+    - name: Delete Server
+      include_tasks: "delete_server.yml"
+      when: error_lock
+
+    #- name: Clone Error
+    #  include_tasks: "clone_error.yml"
+    #  when: not error_lock
+  ignore_errors: true
+  rescue:
+    - name: Create issue to gitlab
+      uri:
+        url: "{{ gitlab_url }}/api/v4/projects/{{ gitlab_project_id }}/issues"
+        method: POST
+        headers:
+          PRIVATE-TOKEN: "{{ gitlab_token }}"
+        body: "title=Update problem with template: {{ template_id }}&description=There is an update problem with this template. Please check ansible result.&assignee_ids={{ gitlab_assignee_id }}"
+        return_content: yes
+        status_code: 201
+        timeout: 300
+      delegate_to: localhost
+      register: gitlab_result
+      when: playbook_execution_output.json.data.0.result_failed|int == 1
