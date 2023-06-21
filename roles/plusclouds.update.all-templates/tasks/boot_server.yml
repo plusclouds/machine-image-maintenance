@@ -6,7 +6,7 @@
     headers:
       Authorization: "Bearer {{ user_token }}"
     return_content: yes
-    status_code: 204
+    status_code: [201,204]
     timeout: 300
 
 - name: Wait until the status is running
@@ -26,10 +26,10 @@
 - name: Wait for ping loss
   local_action: shell ping -q -c 1 -W 1 {{ public_ip_address.json.data.ip_addr }}
   register: res
-  until: ('0 received' not in res.stdout)
   retries: 20
   delay: 3
-  ignore_errors: yes
+  failed_when: "'100% packet loss' not in res.stdout"
+  ignore_errors: true
 
 - name: Append failed image id into array
   set_fact:
